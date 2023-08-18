@@ -35,7 +35,7 @@ import openai
 import pinecone
 
 load_dotenv()
-openai.api_key = "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"
+openai.api_key = "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"
 
 pinecone.init(
     api_key=os.environ.get("PINECONE_API_KEY"),  # find at app.pinecone.io

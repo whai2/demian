@@ -10,8 +10,7 @@ from django.core.files.uploadedfile import UploadedFile
 from .models import TextFileUpload
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from mysite.utils import rename
-from common.forms import TextFileUploadForm
+from django.core.files.storage import FileSystemStorage
 
 # django-rest-framework module
 from rest_framework import viewsets
@@ -103,48 +102,65 @@ def post(request):
 
 
 save_chain = []
+cycle = 3
 @csrf_exempt
 def fileUpload(request):
     if request.method == "POST":
-        file = request.FILES["file"]
-        file_name = UploadedFile(file).name
-        form = TextFileUploadForm(request.FILES)
-        if form.is_valid():
-            fileupload = TextFileUpload(text_file=file)
-            fileupload.save()
-            save_path = os.path.join(settings.MEDIA_ROOT, 'textuploads/', rename.pop())
-            #savepath.append(save_path)
+        try:
+            allowed_ext = ['pdf']
+
+            file = request.FILES["file"]
+            ext = str(request.FILES['file']).split('.')[-1].lower()
+
+            if not ext in allowed_ext:
+                return JsonResponse({'messages': '허용된 확장자가 아닙니다.(가능한 확장자: pdf)'})
+            
+            upload_path = os.path.join(settings.MEDIA_ROOT,'flashuploads/')
+
+            if len(save_chain) > 2:
+                save_chain.pop(0)
+            
+            
+            fs = FileSystemStorage(location=upload_path)
+            filename = fs.save(f'flashfile.{ext}', file)
+
+            save_path = os.path.join(upload_path, f'flashfile.{ext}')
+            
             texts = pdf_pretreatments(save_path)
+            fs.delete(f'flashfile.{ext}')
+
             embeddings = OpenAIEmbeddings()
             index_name = "langchain-demo"
             if index_name not in pinecone.list_indexes():
-    # we create a new index
+            # we create a new index
                 pinecone.create_index(
-                    name=index_name,
-                    metric='cosine',
-                    dimension=1536  
-            )
+                        name=index_name,
+                        metric='cosine',
+                        dimension=1536  
+                        )
             vector_store = Pinecone.from_documents(texts,
-                                     embeddings,
-                                    index_name = index_name
-                                     )
-            #vector_store.persist()
+                                            embeddings,
+                                            index_name = index_name
+                                            )
             retriever = vector_store.as_retriever()
             model = ChatOpenAI(
-                model_name="gpt-3.5-turbo",
-                temperature="0",
-                # verbose=True
+                        model_name="gpt-3.5-turbo",
+                        temperature="0",
+                         verbose=True
             )
             chain = ConversationalRetrievalChain.from_llm(
-            model,
-            retriever=retriever,
-            return_source_documents=True,
-            # verbose=True,
+                    model,
+                    retriever=retriever,
+                    return_source_documents=True,
+                     verbose=True,
             )
             save_chain.append(chain)
+            
+
             return JsonResponse({'message': '파일 업로드가 성공적으로 완료되었습니다.'})
-    else:
-        return JsonResponse({'message': '파일을 업로드할 수 없습니다.'})
+        
+        except Exception as e:
+            return JsonResponse({'message': '파일을 업로드할 수 없습니다.'})
 
 
 @login_required(login_url='common:login')

@@ -33,6 +33,7 @@ import openai
 # pincone module
 import pinecone
 
+
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
@@ -74,35 +75,45 @@ def pdf_pretreatments_dic_level(pdf_dic):
 
 
 # view function
-chat_history = []
+chat_history_db = {}
+#chat_history = []
+chain_db = {}
 @api_view(['GET', 'POST'])
 #@csrf_exempt
 def post(request):    
     content = {}
-
-    if request.method == "POST":
-        if save_chain != []:
-            chain = save_chain[-1]
+    try:
+        if request.method == "POST":
             data = json.loads(request.body)
+            uid = data.get('uid')
             message = data.get('message')
-            question = message
-            response = chain({"question": question, "chat_history": chat_history})
-            answer = response["answer"]
-            source = response["source_documents"]
-            chat_history.append(HumanMessage(content=question))
-            chat_history.append(AIMessage(content=answer))
-            #print(chat_history)
+            if f'{uid}' in chain_db:
+                chain = chain_db[f'{uid}'][-1]
+                if f'{uid}' not in chat_history_db:
+                    chat_history = []
+                    chat_history_db[f'{uid}'] = chat_history
+                question = message
+                response = chain({"question": question, "chat_history": chat_history_db[f'{uid}']})
+                answer = response["answer"]
+                source = response["source_documents"]
+                chat_history_db[f'{uid}'].append(HumanMessage(content=question))
+                chat_history_db[f'{uid}'].append(AIMessage(content=answer))
+                page = int(source[0].metadata['page'])
+                page = page+1
+                print(page)
+                page_content = source[0].page_content
+                print(page_content)
 
-            content['result'] = answer
-            return Response({'message': answer})
-        else:
-            return Response({'message': "해석할 파일이 없습니다."})
-    else:
-        return Response({'message': "해석할 파일이 없습니다."})
+                content['result'] = answer
+                return Response({'message': answer,'page':f'참고 페이지: {page} 페이지','page_content':f'참고 내용: {page_content}'})
+            
+            else:
+                return Response({'message': "해석할 파일이 없습니다.",'page':"참고 페이지: 없음","page_content":"참고 내용: 없음" })
+            
+    except Exception as e:
+        return JsonResponse({'message': '오류가 발생했습니다.','page':"참고 페이지: 없음","page_content":"참고 내용: 없음" })
 
 
-save_chain = []
-cycle = 3
 @csrf_exempt
 def fileUpload(request):
     if request.method == "POST":
@@ -110,23 +121,21 @@ def fileUpload(request):
             allowed_ext = ['pdf']
 
             file = request.FILES["file"]
+            uid = request.POST['uid']
             ext = str(request.FILES['file']).split('.')[-1].lower()
 
             if not ext in allowed_ext:
-                return JsonResponse({'messages': '허용된 확장자가 아닙니다.(가능한 확장자: pdf)'})
+                return JsonResponse({'messages': '허용된 확장자가 아닙니다.(가능한 확장자: pdf)','page':"참고 페이지: 없음","page_content":"참고 내용: 없음" })
             
             upload_path = os.path.join(settings.MEDIA_ROOT,'flashuploads/')
-
-            if len(save_chain) > 2:
-                save_chain.pop(0)
-            
-            
+                        
             fs = FileSystemStorage(location=upload_path)
             filename = fs.save(f'flashfile.{ext}', file)
-
             save_path = os.path.join(upload_path, f'flashfile.{ext}')
             
             texts = pdf_pretreatments(save_path)
+
+            #지우기
             fs.delete(f'flashfile.{ext}')
 
             embeddings = OpenAIEmbeddings()
@@ -154,13 +163,16 @@ def fileUpload(request):
                     return_source_documents=True,
                      verbose=True,
             )
-            save_chain.append(chain)
             
 
-            return JsonResponse({'message': '파일 업로드가 성공적으로 완료되었습니다.'})
+            empty_list = []
+            empty_list.append(chain)
+            chain_db[f'{uid}'] = empty_list
+            
+            return JsonResponse({'message': '파일 업로드가 성공적으로 완료되었습니다.','page':"참고 페이지: 없음","page_content":"참고 내용: 없음" })
         
         except Exception as e:
-            return JsonResponse({'message': '파일을 업로드할 수 없습니다.'})
+            return JsonResponse({'message': '파일을 업로드할 수 없습니다.','page':"참고 페이지: 없음","page_content":"참고 내용: 없음"})
 
 
 @login_required(login_url='common:login')

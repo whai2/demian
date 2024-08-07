@@ -27,28 +27,21 @@ https://github.com/whai2/demian_flutter
     
 #### - 이메일 회원가입
 
-![이메일 회원가입](https://github.com/Splint-Final-Project/Pickle-Time-Frontend/assets/76935187/bb753c17-6f0a-449f-8bc6-44b7b3a667fb)
+![이메일 회원가입](https://github.com/user-attachments/assets/599c803a-f5a8-4c47-ae43-644b0c126018)
 
 
 ### 🔔 홈페이지
-  - 채팅방: 파일 업로드 시, 해당 파일에 대한 RAG 채팅방 생성
+  - 채팅: 파일 업로드 시, 해당 파일에 대한 RAG 채팅방 생성
   - 로그아웃 및 회원 탈퇴
     
-#### - 채팅 방
+#### - 채팅
 
-![피클생성2](https://github.com/Splint-Final-Project/Pickle-Time-Frontend/assets/76935187/46ec11b9-5941-4e7d-9600-242ce2776bf3)
+![채팅](https://github.com/user-attachments/assets/0e96c55b-d200-4fec-8b66-28743d62e9e7)
 
-#### - 로그아웃 및 회원 탈퇴
+#### - 회원 탈퇴
 
-![찜하기](https://github.com/Splint-Final-Project/Pickle-Time-Frontend/assets/76935187/23d4ad9d-6f30-4ac8-82ed-b68a9c703cd6)
-
-### 🔔 채팅
-  - 파일 업로드 시, RAG 채팅 가능
-    
-#### - 메세지 보내기
-
-![메세지](https://github.com/Splint-Final-Project/Pickle-Time-Frontend/assets/76935187/cf376c51-e39b-49f3-8385-1e67546a088d)
-
+![회원 탈퇴](https://github.com/user-attachments/assets/c13829d3-39d1-4167-ac05-c698b74745b5)
+![회원 탈퇴](https://github.com/user-attachments/assets/f63a7ed1-7767-4a82-a53b-27b10b3b49e9)
 
 </br>
 

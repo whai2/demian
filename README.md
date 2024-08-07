@@ -6,7 +6,7 @@
 
 ## 🚩배포 주소 바로가기 
 
-https://pickle-time-frontend.vercel.app/
+https://apps.apple.com/us/app/demianai/id6464038928
 
 ## 🗓️ 개발기간
 
